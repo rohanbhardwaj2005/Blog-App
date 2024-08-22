@@ -1,0 +1,166 @@
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block title %} 
+{{ post.title }}
+{% endblock %} 
+
+{% block css_files %} 
+<link rel="stylesheet" href="{% static "blog/post-detail.css" %}" /> 
+{% endblock %} 
+
+{% block content %}
+
+{% if comment_form.errors %}
+  <div id="alert">
+    <h2>Saving the comment failed!</h2>
+    <p>Please check the comment form below the post and fix your erros.</p>
+    <a href="#comment-form">Fix!</a>
+  </div>
+{% endif %}
+
+<section id="summary">
+  <h2 style="margin-bottom: 30px;">{{ post.title }}</h2>
+  <div>
+  {% for tag in post_tags %}
+    <span class="tag" style="margin-right: 30px; margin-bottom: 20px;">{{ tag.caption }}</span>
+  {% endfor %}
+</div>
+<div id="read-later" style="margin-top: 50px;"> 
+  <form action="{% url "read-later" %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" value="{{ post.id }}" name="post_id" />
+    <button>
+      {% if saved_for_later %}
+        Remove from saved posts
+      {% else %}
+        Save Post
+      {% endif %}
+    </button>
+  </form>
+  
+</div>
+
+  <article>
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+    <address>By <a href="mailto:{{ post.author.email_address }}">{{ post.author }}</a></address>
+    <div>Last updated on <time>{{ post.date|date:"d M Y" }}</time></div>
+  </article>
+</section>
+
+<main>
+  {{ post.content|linebreaks }}
+</main>
+
+<section id="comments">
+  {% if comments %}
+    <ul>
+      {% for comment in comments %}
+        <li style="{% if comment.user_name == 'Rohan Bhardwaj' and comment.user_email == 'rohanbrdps@gmail.com' %}background-color: #f0f8ff; border: 2px solid #ffd700; border-radius: 5px; padding: 10px;{% endif %}">
+          <div style="display: flex; align-items: center;">
+            {% if comment.user_name == 'Rohan Bhardwaj' and comment.user_email == 'rohanbrdps@gmail.com' %}
+              <span style="color: #ffd700; font-size: 1.2em; margin-right: 15px;">🌟</span>
+            {% endif %}
+            <h2>{{ comment.user_name }}</h2>
+          </div>
+          <p>{{ comment.text|linebreaks }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+    <div style="text-align: center;">
+      <button id="comment-button">Add a Comment</button>
+    </div>
+  {% else %}
+    <p style="text-align: center; font-weight: bold;">
+      No comments yet. Be the first to share your thoughts and start the conversation!
+    </p>
+    <div style="text-align: center;">
+      <button id="comment-button">Add a Comment</button>
+    </div>
+  {% endif %}
+</section>
+
+
+<section id="comment-section">
+  <div id="popup-form" class="popup">
+    <div class="popup-content">
+      <span id="close-button">&times;</span>
+      <h2>Your Comment</h2>
+      <form action="{% url 'post-detail-page' post.slug %}" method="POST">
+        {% csrf_token %}
+        {% for form_field in comment_form %}
+          <div class="form-control {% if form_field.errors %}invalid{% endif %}">
+            {{ form_field.label_tag }}
+            {{ form_field }}
+            {{ form_field.errors }}
+          </div>
+        {% endfor %}
+        <button>Save Comment</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .popup {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Ensures the popup is on top */
+  }
+
+  .popup-content {
+    background-color: white;
+    margin: 15% auto; /* Center the popup vertically and horizontally */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Adjust the width as needed */
+    max-width: 500px; /* Maximum width for the form */
+  }
+
+  #close-button {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  #comment-button, #popup-form button {
+    margin-top: 20px; /* Adjust spacing as needed */
+    padding: 10px 20px;
+    background-color: #390281;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  #comment-button:hover, #popup-form button:hover {
+    background-color: #2b015f;
+  }
+</style>
+
+
+
+<script>
+  document.getElementById('comment-button').onclick = function() {
+    document.getElementById('popup-form').style.display = 'block';
+  };
+
+  document.getElementById('close-button').onclick = function() {
+    document.getElementById('popup-form').style.display = 'none';
+  };
+
+  window.onclick = function(event) {
+    const popupForm = document.getElementById('popup-form');
+    if (event.target == popupForm) {
+      popupForm.style.display = 'none';
+    }
+  };
+</script>
+
+
+{% endblock %}
